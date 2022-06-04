@@ -15,7 +15,7 @@ max_length = 1431
 max_num_words = 23140
 filters = [6]
 num_filters = 2426
-nclasses = 451
+nclasses = 8 # categories
 
 def make_embedding_layer(args, tokenizer):
     sequence_input = Input(shape=(max_length,), dtype='uint16')

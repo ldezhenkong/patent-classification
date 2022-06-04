@@ -81,6 +81,20 @@ def convert(labels_ID):
         labels.append(id_of_label)
     save_data(status, texts, labels, labels_ID)
 
+def convert_v2(status, labels_ID, df):
+    texts = []
+    labels = []
+    for _, entry in df.iterrows():
+        if type(entry.ipc_single) != str:
+            continue
+        text = entry.text_2500.lower()
+        label = entry.ipc_single[0]
+
+        id_of_label = labels_ID.get(label)
+        texts.append(text)
+        labels.append(id_of_label)
+    save_data(status, texts, labels, labels_ID)
+
 
 def save_data(status, texts, labels, labels_ID):
     with open('./resources/' + status + '_texts.pkl', 'wb') as pckl:
@@ -91,5 +105,5 @@ def save_data(status, texts, labels, labels_ID):
         with open('./resources/labels_ID.pkl', 'wb') as pckl:
             pickle.dump(labels_ID, pckl)
     print('Done! Number of classes of ' + status + ' documents is ' +
-          str(len(labels_ID)))
+          str(len(set(labels))))
     print("total number of samples is " + str(len(texts)))
