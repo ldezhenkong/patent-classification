@@ -33,14 +33,18 @@ def editData(text_file, label_file, max_length, tokenizer):
     data = pad_sequences(sequences, maxlen=max_length,
                          padding='post', truncating='post')
     del sequences
+    data = data.astype(np.uint16)
+    labels = load_labels(label_file)
+    return data, labels
+
+def load_labels(label_file):
     label_path = './resources/' + label_file
     if not os.path.isfile(label_path):
         print(label_file + " not found")
         exit()
     with open(label_path, 'rb') as pckl:
         labels = pickle.load(pckl)
-    data = data.astype(np.uint16)
-    return data, labels
+    return labels
 
 
 # def preprocess(fasttext_name, embedding_dim, max_length, max_num_words):
