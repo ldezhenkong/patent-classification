@@ -1,4 +1,5 @@
 import numpy as np
+from keras.callbacks import EarlyStopping, ModelCheckpoint
 from keras.utils import to_categorical
 from keras.layers import Dense, Input, Embedding, Conv2D, MaxPool2D
 from keras.layers import Reshape, Flatten, Dropout, Concatenate
@@ -119,11 +120,36 @@ def main():
                             num_classes=nclasses).astype(np.float16)
     y_val = to_categorical(np.asarray(y_val),
                         num_classes=nclasses).astype(np.float16)
+
+    callbacks = [
+        ModelCheckpoint(
+            # Path where to save the model
+            # The two parameters below mean that we will overwrite
+            # the current checkpoint if and only if
+            # the `val_loss` score has improved.
+            # The saved model name will include the current epoch.
+            filepath=args.checkpoint_path+"_{epoch}",
+            save_best_only=True,  # Only save a model if `val_loss` has improved.
+            monitor="val_loss",
+            verbose=1,
+        ),
+        EarlyStopping(
+            # Stop training when `val_loss` is no longer improving
+            monitor="val_loss",
+            # "no longer improving" being defined as "no better than 1e-2 less"
+            min_delta=1e-2,
+            # "no longer improving" being further defined as "for at least 2 epochs"
+            patience=2,
+            verbose=1,
+        )
+    ]
+
     history = model.fit(x_train, y_train,
                         batch_size=bs, shuffle=True,
                         epochs=20,
+                        callbacks=callbacks,
                         validation_data=(x_val, y_val))
-    model.save(args.checkpoint_path)
+    # model.save(args.checkpoint_path)
 
 if __name__ == '__main__':
     main()

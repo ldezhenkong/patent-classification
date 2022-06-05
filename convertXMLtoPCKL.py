@@ -87,14 +87,13 @@ def convert_v2(status, labels_ID, df):
     for _, entry in df.iterrows():
         if type(entry.ipc_single) != str:
             continue
-        text = entry.text_2500.lower()
+        text = entry.text_1500.lower()
         label = entry.ipc_single[0]
 
         id_of_label = labels_ID.get(label)
         texts.append(text)
         labels.append(id_of_label)
     save_data(status, texts, labels, labels_ID)
-
 
 def save_data(status, texts, labels, labels_ID):
     with open('./resources/' + status + '_texts.pkl', 'wb') as pckl:
