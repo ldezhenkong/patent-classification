@@ -6,7 +6,7 @@ from keras.layers import Reshape, Flatten, Dropout, Concatenate
 from keras.models import Model, load_model
 from keras.optimizers import Adam
 from tensorflow import linalg
-from preprocess_data import get_train_val_datasets, preprocess_fasttext_v2, preprocess_word2vec
+from preprocess_data import get_train_val_datasets, preprocess_fasttext_v2, preprocess_word2vec, preprocess_elmo
 import argparse
 
 learning_rate = 0.001145
@@ -49,6 +49,18 @@ def make_embedding_layer(args, tokenizer):
         if not args.concat_at_start:
             assert args.embedding_dim == args.w2v_embedding_dim, "if using w2v only, embedding_dim == w2v_embedding_dim"
             return sequence_input, w2v_reshape
+    if args.elmo_embedding is not None:
+        elmo_embedding_matrix = preprocess_elmo(args.elmo_embedding, args.elmo_embedding_dim, max_num_words, tokenizer)
+        elmo_embedding_layer = Embedding(max_num_words,
+                        args.elmo_embedding_dim,
+                        weights=[elmo_embedding_matrix],
+                        input_length=max_length,
+                        trainable=True)
+        elmo_embedded_sequences = elmo_embedding_layer(sequence_input)
+        elmo_reshape = Reshape((max_length, args.elmo_embedding_dim, 1))(elmo_embedded_sequences)
+        if not args.concat_at_start:
+            assert args.embedding_dim == args.elmo_embedding_dim, "if using elmo only, embedding_dim == elmo_embedding_dim"
+            return sequence_input, elmo_reshape
     if args.concat_at_start:
         if args.concat_method == 'raw':
             assert args.embedding_dim == args.fasttext_embedding_dim + args.w2v_embedding_dim, "if raw concat, final embedding dim should equal sum of individual embedding dims"
@@ -74,6 +86,8 @@ def main():
     parser.add_argument('-fasttext_embedding_dim', type=int, default=300)
     parser.add_argument('-w2v_embedding')
     parser.add_argument('-w2v_embedding_dim', type=int, default=200)
+    parser.add_argument('-elmo_embedding')
+    parser.add_argument('-elmo_embedding_dim', type=int, default=1024)
     parser.add_argument('-embedding_dim', type=int, default=300)
     parser.add_argument('-concat_at_start', type=bool, default=False)
     parser.add_argument('-concat_method', type=str, default='raw', help='raw|linear|svd')

@@ -1,5 +1,7 @@
 resources/wiki-news-300d-1M-subword.vec
 resources/patent_w2v.txt
+resources/elmo_vecs*
+patents-10000-preprocessed.csv
 __pycache__
 **/.DS_Store
 script.py

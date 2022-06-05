@@ -119,8 +119,20 @@ def get_train_val_datasets(max_num_words, max_length):
                             max_length, tokenizer)
     return x_train, y_train, x_val, y_val, tokenizer
 
-def preprocess_elmo(word2vec, embedding_dim, max_length, max_num_words):
-    pass
+def preprocess_elmo(elmo_name, embedding_dim, max_num_words, tokenizer):
+    print("loading FastText data")
+    fastmodel = load_vectors('./resources/' + elmo_name)
+    word_index = tokenizer.word_index
+    print('Preparing embedding matrix ...')
+    embedding_matrix = np.zeros((max_num_words, embedding_dim))
+    for word, i in word_index.items():
+        if i >= max_num_words:
+            continue
+        if word in fastmodel:
+            embedding_matrix[i] = list(fastmodel[word])
+    print("Embedding done!")
+    return embedding_matrix
+
     # print("loading word2vec data")
     # fastmodel = load_vectors('./resources/' + word2vec)
     # texts_tokenize = readData('train_texts.pkl', max_length)
