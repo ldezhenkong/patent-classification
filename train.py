@@ -8,6 +8,7 @@ from keras.optimizers import Adam
 from tensorflow import linalg
 from preprocess_data import get_train_val_datasets, preprocess_fasttext_v2, preprocess_word2vec, preprocess_elmo
 import argparse
+import tensorflow as tf
 
 learning_rate = 0.001145
 bs = 128
@@ -63,20 +64,45 @@ def make_embedding_layer(args, tokenizer):
             return sequence_input, elmo_reshape
     if args.concat_at_start:
         if args.concat_method == 'raw':
-            assert args.embedding_dim == args.fasttext_embedding_dim + args.w2v_embedding_dim, "if raw concat, final embedding dim should equal sum of individual embedding dims"
-            reshape = Concatenate(axis=2)([w2v_reshape, fasttext_reshape])
+            assert args.embedding_dim == args.fasttext_embedding_dim + args.w2v_embedding_dim + + args.elmo_embedding_dim, "if raw concat, final embedding dim should equal sum of individual embedding dims"
+            reshape = Concatenate(axis=2)([w2v_reshape, fasttext_reshape, elmo_reshape])
             return sequence_input, reshape
         if args.concat_method == 'linear':
-            concat = Concatenate(axis=2)([w2v_embedded_sequences, fasttext_embedded_sequences])
+            concat = Concatenate(axis=2)([w2v_embedded_sequences, fasttext_embedded_sequences, elmo_embedded_sequences])
             shrink = Dense(units=args.embedding_dim, activation='linear')(concat)
             reshape = Reshape((max_length, args.embedding_dim, 1))(shrink)
             return sequence_input, reshape
         if args.concat_method == 'svd':
             concat = Concatenate(axis=2)([w2v_embedded_sequences, fasttext_embedded_sequences])
-            s = linalg.svd(
-                concat, compute_uv=False
-            )
-            reshape = Reshape((max_length, args.embedding_dim, 1))(s)
+            # s = linalg.svd(
+            #     concat, compute_uv=False
+            # )
+
+            # SVD
+            St, Ut, Vt = linalg.svd(concat, compute_uv=True)
+            
+            # Compute reduced matrices
+            Sk = linalg.diag(St)[:, 0:args.embedding_dim, 0:args.embedding_dim]
+            Uk = Ut[:, :, 0:args.embedding_dim]
+            Vk = Vt[:, 0:args.embedding_dim, :]
+            
+            # Compute Su and Si
+            Su = tf.matmul(Uk, Sk)
+            # Si = tf.matmul(tf.sqrt(Sk), Vk)
+            
+            # # Compute user ratings
+            # s = tf.matmul(Su, Si)
+            # print("concat", tf.shape(concat))
+            # print("St", tf.shape(St))
+            # print("Ut", tf.shape(Ut))
+            # print("Vt", tf.shape(Vt))
+            # print("Sk", tf.shape(Sk))
+            # print("Uk", tf.shape(Uk))
+            # print("Vk", tf.shape(Vk))
+            # print("Su", tf.shape(Su))
+            # print("Si", tf.shape(Si))
+            # print("s", tf.shape(s))
+            reshape = Reshape((max_length, args.embedding_dim, 1))(Su)
             return sequence_input, reshape
 
 

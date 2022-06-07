@@ -25,8 +25,8 @@ for p in pps:
       ha='center', va='bottom',
       fontsize=8)
 
-plt.xlabel("Patent categories")
+plt.xlabel("IPC Subject")
 plt.ylabel("# samples")
 plt.xticks(index, labels=categories)
-plt.title('Patent Category Distribution')
+plt.title('Dataset IPC Subject Distribution')
 plt.show()
